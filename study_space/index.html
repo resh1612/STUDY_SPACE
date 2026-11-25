@@ -1,0 +1,2410 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101110">
+  <title>ZenQuest — Your study space</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101110;
+      --panel: #171816;
+      --panel-hover: #1e1f1c;
+      --sidebar: #141513;
+      --line: #2b2d29;
+      --line-soft: #232522;
+      --text: #eeefec;
+      --muted: #92968e;
+      --muted-2: #80847c;
+      --sage: #a8b9a2;
+      --sage-hover: #b9cbb3;
+      --sage-ink: #141b13;
+      --sage-soft: #1f271e;
+      --sage-border: #354234;
+      --control: #121311;
+      --control-hover: #1a1b18;
+      --danger: #d97777;
+      --danger-soft: #291a1a;
+      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-sm: 6px;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--sage);
+      outline-offset: 2px;
+    }
+    a { color: var(--sage); text-decoration: none; }
+
+    /* Layout */
+    .shell { min-height: 100vh; display: flex; }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 250px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--line);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: #232a22;
+      border: 1px solid #364434;
+      color: #b0c6ad;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+    .nav { display: grid; gap: 4px; }
+    .nav button {
+      text-align: left;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #9da199;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav button:hover { background: #1e201d; color: #f0f2ed; }
+    .nav button[aria-current="page"] {
+      background: #242722;
+      color: #f4f6f2;
+      font-weight: 550;
+      border: 1px solid #333930;
+    }
+    .nav-mark { width: 18px; text-align: center; color: var(--sage); font-size: 15px; }
+
+    .side-note {
+      margin-top: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #171816;
+    }
+    .side-note-label {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted-2);
+      margin: 0 0 6px;
+    }
+    .side-note strong { font-size: 12.5px; font-weight: 500; display: block; line-height: 1.4; color: #dcdfd8; }
+    .side-note p { margin: 6px 0 0; font-size: 11px; color: var(--muted); }
+
+    .profile-btn {
+      margin-top: 16px;
+      padding: 14px 10px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s;
+      text-align: left;
+    }
+    .profile-btn:hover { background: #1b1c1a; }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #2d332b;
+      border: 1px solid #3d473a;
+      color: #d8e2d4;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 13px; font-weight: 550; truncate; }
+    .profile-level { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .profile-gear { color: var(--muted-2); font-size: 13px; }
+
+    /* Main Area */
+    .main { margin-left: 250px; min-height: 100vh; flex: 1; display: flex; flex-direction: column; }
+    .topbar {
+      height: 60px;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 0 clamp(18px, 4vw, 38px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      background: rgba(16, 17, 16, 0.88);
+      backdrop-filter: blur(12px);
+      z-index: 9;
+    }
+    .crumb { display: flex; gap: 8px; align-items: center; }
+    .crumb-current { color: #e5e8e2; font-weight: 500; }
+    .top-actions { display: flex; align-items: center; gap: 14px; }
+    .top-date { display: flex; gap: 8px; align-items: center; }
+    .top-date:before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #9bb094; }
+
+    /* Topbar Mini Timer Chip */
+    .mini-timer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--sage-soft);
+      border: 1px solid var(--sage-border);
+      color: #b7ceb1;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mini-timer:hover { background: #263324; border-color: #495d46; color: #d0e4cb; }
+    .mini-timer-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #7bd36f;
+      animation: pulse-dot 1.8s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Ambient Sound Quick Pill */
+    .ambient-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1b1d19;
+      border: 1px solid var(--line);
+      color: #9ea499;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ambient-pill.active {
+      background: #232b21;
+      border-color: #3f513d;
+      color: #c0d8bc;
+    }
+
+    /* Views Common */
+    .view {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 36px clamp(18px, 4vw, 38px) 60px;
+      width: 100%;
+    }
+    .welcome {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 34px;
+    }
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 {
+      font-size: clamp(26px, 3.8vw, 34px);
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+    h2 { font-size: 16px; font-weight: 550; letter-spacing: -0.02em; margin: 0; }
+    .subtle { color: var(--muted); font-size: 13.5px; margin: 6px 0 0; }
+
+    /* Buttons */
+    .button {
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: var(--sage);
+      color: var(--sage-ink);
+      padding: 9px 15px;
+      font-size: 13px;
+      font-weight: 550;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background 0.15s, transform 0.05s;
+    }
+    .button:hover { background: var(--sage-hover); }
+    .button:active { transform: scale(0.99); }
+    .button-outline {
+      color: #d1d3cc;
+      background: transparent;
+      border: 1px solid #383b34;
+    }
+    .button-outline:hover { background: #20221e; border-color: #4b4e47; }
+    .button-ghost { color: #a4a99f; padding: 6px 10px; font-size: 12px; }
+    .button-ghost:hover { color: #f0f2ee; background: #1c1d1a; }
+    .button-danger {
+      background: var(--danger-soft);
+      border: 1px solid #4a2828;
+      color: #e59090;
+    }
+    .button-danger:hover { background: #381f1f; color: #ffa3a3; }
+    .button-sm { padding: 6px 11px; font-size: 12px; }
+
+    /* Cards & Panels */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-bottom: 22px;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      border: 1px solid var(--sage-border);
+      background: var(--sage-soft);
+      color: #b5c7ae;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-subtle {
+      border: 1px solid #333630;
+      background: #1b1d19;
+      color: #9fa499;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+    .progress-track {
+      height: 7px;
+      background: #282a26;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 18px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--sage);
+      transition: width 0.3s ease;
+      border-radius: 99px;
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      color: #8c9087;
+      font-size: 11.5px;
+      margin-top: 8px;
+    }
+
+    /* Stats Grid */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0 0 28px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11.5px;
+    }
+    .stat-icon { color: var(--sage); }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 520;
+      letter-spacing: -0.04em;
+      margin: 14px 0 2px;
+      font-family: var(--mono);
+    }
+    .stat-note { font-size: 11px; color: #767b73; margin: 0; }
+
+    /* Streak & Daily Banner */
+    .daily-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .daily-card {
+      background: #151814;
+      border: 1px solid #283326;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .daily-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #212c1f;
+      border: 1px solid #364932;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .daily-card h3 { margin: 0; font-size: 13.5px; font-weight: 550; }
+    .daily-card p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+
+    /* Tables */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-top: 10px;
+    }
+    .section-heading p { color: var(--muted-2); font-size: 12px; margin: 3px 0 0; }
+    .text-button {
+      border: 0;
+      background: none;
+      color: #b7c5b1;
+      font-size: 12px;
+      padding: 4px 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .text-button:hover { color: #fff; }
+
+    .table-wrap { overflow-x: auto; margin-top: 4px; }
+    table {
+      border-collapse: collapse;
+      text-align: left;
+      width: 100%;
+      min-width: 580px;
+      font-size: 12.5px;
+    }
+    th {
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 12px 10px 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    td {
+      padding: 13px 10px 13px 0;
+      border-bottom: 1px solid var(--line-soft);
+      color: #a7aba3;
+      vertical-align: middle;
+    }
+    td:first-child { color: #e1e3de; }
+    td:last-child, th:last-child { text-align: right; padding-right: 0; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    .empty {
+      padding: 42px 12px;
+      text-align: center;
+      color: var(--muted-2);
+      font-size: 13px;
+    }
+
+    /* Timer View */
+    .timer-view {
+      min-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px 20px 60px;
+      position: relative;
+    }
+    .timer-subject-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #171815;
+      border: 1px solid #30332c;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      color: #bec5b9;
+      margin-bottom: 24px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .timer-subject-pill:hover { border-color: var(--sage); color: #fff; }
+    .timer-status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 18px;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9bb094;
+    }
+    .status-dot.active {
+      background: #73d765;
+      box-shadow: 0 0 10px rgba(115, 215, 101, 0.45);
+    }
+    .timer-value {
+      font: 300 clamp(82px, 17vw, 148px)/1 var(--mono);
+      letter-spacing: -0.075em;
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+      color: #f5f7f3;
+      text-shadow: 0 0 40px rgba(168, 185, 162, 0.08);
+      margin: 4px 0 12px;
+    }
+    .timer-caption { font-size: 13px; color: #888d84; margin: 8px 0 0; max-width: 400px; }
+    .timer-controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 36px;
+    }
+    .timer-controls .button { min-width: 154px; padding: 12px 20px; font-size: 14px; }
+    .timer-controls .reset { width: 46px; min-width: 46px; padding: 0; font-size: 16px; }
+
+    .timer-modes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 34px;
+    }
+    .timer-mode-btn {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #7b8076;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .timer-mode-btn:hover { color: #d0d3cc; background: #1a1c19; }
+    .timer-mode-btn.selected {
+      color: #e5ece2;
+      background: #20261e;
+      border-color: #384936;
+      font-weight: 500;
+    }
+
+    /* Ambient noise controls inside Timer */
+    .ambient-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 32px;
+      padding: 10px 18px;
+      border-radius: 30px;
+      background: #151714;
+      border: 1px solid #282c25;
+      font-size: 12px;
+      color: #9da397;
+    }
+    .ambient-controls select {
+      background: #1e221d;
+      border: 1px solid #363d33;
+      border-radius: 6px;
+      padding: 3px 8px;
+      color: #dbe3d8;
+      font-size: 11.5px;
+    }
+    .ambient-controls input[type="range"] {
+      width: 80px;
+      accent-color: var(--sage);
+      cursor: pointer;
+    }
+
+    /* Quest Ledger View & Forms */
+    .ledger-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .ledger-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .search-box {
+      position: relative;
+      min-width: 220px;
+    }
+    .search-box input {
+      height: 36px;
+      width: 100%;
+      border: 1px solid #373a33;
+      border-radius: var(--radius-sm);
+      background: var(--control);
+      color: var(--text);
+      padding: 0 12px 0 32px;
+      font-size: 12.5px;
+    }
+    .search-box input:focus { border-color: var(--sage); outline: none; }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-2);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .filter-chip {
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      background: #171816;
+      border: 1px solid #2e302b;
+      color: #91968d;
+      cursor: pointer;
+    }
+    .filter-chip:hover { color: #e2e5df; }
+    .filter-chip.active {
+      background: var(--sage-soft);
+      border-color: var(--sage-border);
+      color: #c7dec2;
+      font-weight: 500;
+    }
+
+    .form-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-bottom: 26px;
+    }
+    .form-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .tab-toggle {
+      display: inline-flex;
+      background: #121311;
+      border: 1px solid #2c2f29;
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .tab-toggle button {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #8c9086;
+    }
+    .tab-toggle button.active {
+      background: #252b22;
+      color: #dce7d9;
+      font-weight: 550;
+      border: 1px solid #3a4736;
+    }
+
+    .quest-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) 130px auto;
+      align-items: end;
+      gap: 12px;
+    }
+    .field { display: grid; gap: 6px; color: #a1a59c; font-size: 12px; }
+    .field input, .field select, .field textarea {
+      height: 38px;
+      width: 100%;
+      border: 1px solid #373a33;
+      border-radius: var(--radius-sm);
+      background: var(--control);
+      color: var(--text);
+      padding: 0 11px;
+      font-size: 13px;
+    }
+    .field select { cursor: pointer; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: #798e72;
+      outline: none;
+    }
+
+    /* Category Badges */
+    .cat-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .cat-science { background: #192524; color: #9be5db; border-color: #274744; }
+    .cat-humanities { background: #27211a; color: #f2cb9b; border-color: #4f3b25; }
+    .cat-tech { background: #19222c; color: #a3cbf7; border-color: #293f5b; }
+    .cat-math { background: #241d29; color: #dcb3f7; border-color: #4b325c; }
+    .cat-languages { background: #271c21; color: #f7b3cb; border-color: #5a2c3f; }
+    .cat-reading { background: #23281c; color: #d4e8a9; border-color: #43522c; }
+    .cat-general { background: #20221e; color: #c8ccc4; border-color: #383d34; }
+
+    /* Action Buttons in table */
+    .row-actions { display: inline-flex; gap: 4px; align-items: center; }
+    .action-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      color: var(--muted-2);
+      font-size: 13px;
+    }
+    .action-btn:hover { background: #262923; color: #f0f2ee; }
+    .action-btn.del:hover { background: var(--danger-soft); color: var(--danger); }
+
+    /* Custom Checkbox */
+    .quest-check {
+      appearance: none;
+      width: 17px;
+      height: 17px;
+      border: 1.5px solid #4a5246;
+      border-radius: 4px;
+      background: #161814;
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      margin: 0 8px 0 0;
+      vertical-align: middle;
+      transition: all 0.15s;
+    }
+    .quest-check:checked {
+      background: var(--sage);
+      border-color: var(--sage);
+    }
+    .quest-check:checked::after {
+      content: "✓";
+      color: var(--sage-ink);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Analytics Chart */
+    .chart-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      height: 160px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .chart-bar-wrap {
+      width: 100%;
+      max-width: 44px;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      background: #191c18;
+      border-radius: 4px 4px 0 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .chart-bar {
+      width: 100%;
+      background: var(--sage);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.4s ease;
+      min-height: 2px;
+    }
+    .chart-bar.today { background: #c5dcbd; }
+    .chart-label { font-size: 11px; color: var(--muted-2); margin-top: 6px; }
+    .chart-val { font-size: 10.5px; color: #a4aaa0; font-family: var(--mono); }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 9, 8, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: #171916;
+      border: 1px solid #333830;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      transform: translateY(8px);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-head h2 { font-size: 17px; }
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 18px;
+    }
+    .modal-close:hover { background: #262a23; color: #fff; }
+    .modal-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .modal-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+    .modal-section h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 12px; }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 200;
+      pointer-events: none;
+    }
+    .toast {
+      background: #1e221c;
+      border: 1px solid #384235;
+      color: #eaf1e8;
+      padding: 11px 16px;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      pointer-events: auto;
+      animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .toast-undo {
+      color: var(--sage);
+      font-weight: 600;
+      text-decoration: underline;
+      padding: 0 4px;
+    }
+
+    /* Mobile Adaptations */
+    .mobile-brand { display: none; }
+    @media (max-width: 768px) {
+      .sidebar {
+        inset: auto 0 0;
+        width: 100%;
+        height: 62px;
+        padding: 4px 8px;
+        border-right: 0;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        background: #131412;
+      }
+      .brand, .side-note, .profile-btn { display: none; }
+      .nav {
+        display: flex;
+        width: 100%;
+        justify-content: space-around;
+        gap: 0;
+      }
+      .nav button {
+        padding: 6px 8px;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 10.5px;
+        border-radius: 6px;
+      }
+      .nav-mark { font-size: 15px; }
+      .main { margin-left: 0; padding-bottom: 68px; }
+      .view { padding-top: 24px; }
+      .topbar { height: 54px; padding: 0 14px; }
+      .mobile-brand { display: inline; font-weight: 600; color: #e8eae5; }
+      .crumb-default, .crumb-separator, .crumb-current { display: none; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .daily-row { grid-template-columns: 1fr; }
+      .quest-form { grid-template-columns: 1fr; }
+      .timer-view { min-height: calc(100vh - 54px - 62px); padding-bottom: 30px; }
+      .toast-container { bottom: 74px; right: 14px; left: 14px; }
+      .toast { justify-content: space-between; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="app"></div>
+
+  <!-- Audio Synthesis Script + Full App Controller -->
+  <script>
+    (() => {
+      'use strict';
+
+      /* -------------------------------------------------------------
+       * Storage & Initial Mock Data
+       * ----------------------------------------------------------- */
+      const STORAGE_KEY = 'zenquest-progress-v2';
+
+      const initialQuests = [
+        { id: 'quest-1', subject: 'Cognitive Neuroscience & Memory', category: 'Sciences', duration: 1.5, date: 'Today, 10:24 AM', xp: 90, status: 'completed' },
+        { id: 'quest-2', subject: 'Linear Algebra · Eigenvalues & SVD', category: 'Mathematics', duration: 1.0, date: 'Yesterday, 4:10 PM', xp: 60, status: 'completed' },
+        { id: 'quest-3', subject: 'Spanish Grammar & Conversation', category: 'Languages', duration: 0.5, date: 'Yesterday, 11:32 AM', xp: 30, status: 'completed' },
+        { id: 'quest-4', subject: 'Algorithms: Dynamic Programming', category: 'Coding / Tech', duration: 2.0, date: 'Nov 10, 3:15 PM', xp: 120, status: 'completed' },
+        { id: 'quest-5', subject: 'Read Research Paper on LLM Reasoning', category: 'Reading', duration: 1.0, date: 'Upcoming', xp: 60, status: 'planned' }
+      ];
+
+      const defaultState = {
+        totalXP: 5620,
+        totalHours: 45.0,
+        questHistory: initialQuests,
+        profile: {
+          name: 'Scholar',
+          title: 'Dedicated Scholar',
+          avatarChar: 'S',
+          dailyGoalHours: 2.0
+        },
+        settings: {
+          chimeEnabled: true,
+          chimeVolume: 0.7,
+          ambientType: 'none', // none, rain, stream, pink
+          ambientVolume: 0.35,
+          defaultFocusMinutes: 25,
+          autoRecordSessions: true
+        }
+      };
+
+      let state = { ...defaultState };
+
+      const loadState = () => {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            state = {
+              ...defaultState,
+              ...parsed,
+              profile: { ...defaultState.profile, ...(parsed.profile || {}) },
+              settings: { ...defaultState.settings, ...(parsed.settings || {}) },
+              questHistory: Array.isArray(parsed.questHistory) ? parsed.questHistory : defaultState.questHistory
+            };
+          }
+        } catch (e) {
+          console.warn('Storage read fallback:', e);
+        }
+      };
+
+      const saveState = () => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.warn('Storage save failed:', e);
+        }
+      };
+
+      /* -------------------------------------------------------------
+       * Web Audio Synthesis Engine (Singing Bowl & Ambient Soundscape)
+       * Zero external dependencies / 100% offline
+       * ----------------------------------------------------------- */
+      let audioCtx = null;
+      const getAudioContext = () => {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      };
+
+      // Play peaceful Tibetan singing bowl chime
+      const playZenChime = () => {
+        if (!state.settings.chimeEnabled) return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+
+          const now = ctx.currentTime;
+          const masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime((state.settings.chimeVolume || 0.7) * 0.4, now);
+          masterGain.connect(ctx.destination);
+
+          // Harmonics frequencies for singing bowl
+          const freqs = [432, 864, 1296, 2160];
+          const decays = [3.8, 2.8, 2.0, 1.2];
+          const gains = [0.6, 0.3, 0.15, 0.08];
+
+          freqs.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq + (Math.random() * 2 - 1), now);
+
+            // Subtle vibrato
+            const lfo = ctx.createOscillator();
+            const lfoGain = ctx.createGain();
+            lfo.frequency.setValueAtTime(3.5, now);
+            lfoGain.gain.setValueAtTime(1.2, now);
+            lfo.connect(osc.frequency);
+            lfo.start(now);
+            lfo.stop(now + decays[idx]);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.exponentialRampToValueAtTime(gains[idx], now + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + decays[idx]);
+
+            osc.connect(gain);
+            gain.connect(masterGain);
+
+            osc.start(now);
+            osc.stop(now + decays[idx]);
+          });
+        } catch (err) {
+          console.warn('Audio chime error:', err);
+        }
+      };
+
+      // Procedural Ambient Noise (Rain / Stream / Pink Noise)
+      let ambientNodes = null;
+      const stopAmbientSound = () => {
+        if (ambientNodes) {
+          try {
+            ambientNodes.gain.gain.setValueAtTime(ambientNodes.gain.gain.value, audioCtx.currentTime);
+            ambientNodes.gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+            setTimeout(() => {
+              try { ambientNodes.source.stop(); } catch(_) {}
+              ambientNodes = null;
+            }, 500);
+          } catch (_) { ambientNodes = null; }
+        }
+      };
+
+      const startAmbientSound = (type = state.settings.ambientType) => {
+        stopAmbientSound();
+        if (type === 'none') return;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+
+          // Generate 4-second noise buffer
+          const bufferSize = ctx.sampleRate * 4;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            // Pink noise filtering
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+            b6 = white * 0.115926;
+          }
+
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.loop = true;
+
+          const filter = ctx.createBiquadFilter();
+          if (type === 'rain') {
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1400, ctx.currentTime);
+          } else if (type === 'stream') {
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(900, ctx.currentTime);
+            filter.Q.setValueAtTime(1.2, ctx.currentTime);
+          } else {
+            // pink noise
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(3200, ctx.currentTime);
+          }
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.001, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime((state.settings.ambientVolume || 0.35) * 0.25, ctx.currentTime + 0.5);
+
+          source.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+
+          source.start();
+          ambientNodes = { source, gain, filter };
+        } catch (err) {
+          console.warn('Ambient noise error:', err);
+        }
+      };
+
+      /* -------------------------------------------------------------
+       * Persistent Global Timer Engine
+       * Runs uninterrupted across view transitions!
+       * ----------------------------------------------------------- */
+      let view = 'lounge';
+      let timerKind = 'focus'; // focus, deep, break, longBreak, custom
+      let targetSeconds = 25 * 60;
+      let secondsLeft = 25 * 60;
+      let timerActive = false;
+      let timerInterval = null;
+      let currentSessionSubject = 'General Focus & Study';
+      let currentSessionCategory = 'General';
+
+      const timerPresets = {
+        focus: { label: 'Focus · 25 min', seconds: 25 * 60, kind: 'focus', isBreak: false },
+        deep: { label: 'Deep Focus · 50 min', seconds: 50 * 60, kind: 'deep', isBreak: false },
+        break: { label: 'Break · 5 min', seconds: 5 * 60, kind: 'break', isBreak: true },
+        longBreak: { label: 'Long Break · 15 min', seconds: 15 * 60, kind: 'longBreak', isBreak: true }
+      };
+
+      const setTimerMode = (modeKey, customMinutes = null) => {
+        stopTimerInterval();
+        if (modeKey === 'custom' && customMinutes) {
+          timerKind = 'custom';
+          targetSeconds = Math.max(1, Math.min(180, customMinutes)) * 60;
+          secondsLeft = targetSeconds;
+        } else if (timerPresets[modeKey]) {
+          timerKind = modeKey;
+          targetSeconds = timerPresets[modeKey].seconds;
+          secondsLeft = targetSeconds;
+        }
+        updateGlobalTimerUI();
+      };
+
+      const toggleTimer = () => {
+        getAudioContext(); // warm up audio on user gesture
+        if (timerActive) {
+          stopTimerInterval();
+        } else {
+          startTimerInterval();
+        }
+        updateGlobalTimerUI();
+      };
+
+      const resetTimer = () => {
+        stopTimerInterval();
+        secondsLeft = targetSeconds;
+        updateGlobalTimerUI();
+      };
+
+      const startTimerInterval = () => {
+        timerActive = true;
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          secondsLeft = Math.max(0, secondsLeft - 1);
+          if (secondsLeft === 0) {
+            handleTimerComplete();
+            return;
+          }
+          updateGlobalTimerUI();
+        }, 1000);
+      };
+
+      const stopTimerInterval = () => {
+        timerActive = false;
+        clearInterval(timerInterval);
+        timerInterval = null;
+      };
+
+      const handleTimerComplete = () => {
+        stopTimerInterval();
+        playZenChime();
+
+        const isBreak = timerPresets[timerKind]?.isBreak || false;
+        if (!isBreak) {
+          // Completed Focus Session!
+          const durationHours = +(targetSeconds / 3600).toFixed(2);
+          const earnedXP = Math.round(durationHours * 100) || 50;
+
+          state.totalXP += earnedXP;
+          state.totalHours = +(state.totalHours + durationHours).toFixed(2);
+
+          if (state.settings.autoRecordSessions) {
+            const now = new Date();
+            const dateStr = 'Today, ' + new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(now);
+            const newQuest = {
+              id: 'quest-' + Date.now(),
+              subject: currentSessionSubject || 'Deep Focus Session',
+              category: currentSessionCategory || 'General',
+              duration: durationHours,
+              date: dateStr,
+              xp: earnedXP,
+              status: 'completed'
+            };
+            state.questHistory = [newQuest, ...state.questHistory];
+            showToast(`Session complete! +${earnedXP} XP logged to ledger.`);
+          } else {
+            showToast(`Focus session completed! +${earnedXP} XP earned.`);
+          }
+          saveState();
+
+          // Offer transition to short break
+          timerKind = 'break';
+          targetSeconds = 5 * 60;
+          secondsLeft = 5 * 60;
+        } else {
+          showToast('Break completed! Ready to focus again?');
+          timerKind = 'focus';
+          targetSeconds = 25 * 60;
+          secondsLeft = 25 * 60;
+        }
+
+        render();
+      };
+
+      /* -------------------------------------------------------------
+       * Formatting & Calculations
+       * ----------------------------------------------------------- */
+      const escapeHTML = str => String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+      const formatTime = totalSec => {
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      };
+
+      const getLevel = () => Math.floor(state.totalXP / 500) + 1;
+      const getLevelXP = () => state.totalXP % 500;
+
+      const getRankTitle = lvl => {
+        if (lvl < 5) return 'Novice Seeker';
+        if (lvl < 10) return 'Diligent Apprentice';
+        if (lvl < 20) return 'Dedicated Scholar';
+        if (lvl < 35) return 'Master of Focus';
+        return 'Zen Sage';
+      };
+
+      const dateLabel = () => new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
+
+      // Calculate Daily Streak based on completed quest dates
+      const calculateStreak = () => {
+        const completed = state.questHistory.filter(q => q.status === 'completed');
+        if (!completed.length) return 0;
+        // Simple robust streak calculation based on entries
+        const uniqueDays = new Set(completed.map(q => {
+          if (q.date.startsWith('Today')) return 'day-0';
+          if (q.date.startsWith('Yesterday')) return 'day-1';
+          return q.date.split(',')[0];
+        }));
+        return Math.max(1, uniqueDays.size);
+      };
+
+      // Calculate Today's Study Hours
+      const calculateTodayHours = () => {
+        return state.questHistory
+          .filter(q => q.status === 'completed' && q.date.startsWith('Today'))
+          .reduce((sum, q) => sum + (Number(q.duration) || 0), 0);
+      };
+
+      /* -------------------------------------------------------------
+       * Toast Notification Engine
+       * ----------------------------------------------------------- */
+      let toastContainer = null;
+      let lastDeletedQuest = null;
+
+      const showToast = (message, actionText = null, onAction = null) => {
+        if (!toastContainer) {
+          toastContainer = document.createElement('div');
+          toastContainer.className = 'toast-container';
+          document.body.appendChild(toastContainer);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
+
+        if (actionText && onAction) {
+          const btn = document.createElement('button');
+          btn.className = 'toast-undo';
+          btn.textContent = actionText;
+          btn.onclick = () => {
+            onAction();
+            toast.remove();
+          };
+          toast.appendChild(btn);
+        }
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          setTimeout(() => toast.remove(), 250);
+        }, 4000);
+      };
+
+      /* -------------------------------------------------------------
+       * Views & Templates
+       * ----------------------------------------------------------- */
+      const navItems = [
+        { id: 'lounge', label: 'The Lounge', mark: '⌂' },
+        { id: 'timer', label: 'Zen Timer', mark: '◷' },
+        { id: 'ledger', label: 'Quest Ledger', mark: '▤' },
+        { id: 'analytics', label: 'Insights', mark: '📊' }
+      ];
+
+      const getCategoryBadgeClass = cat => {
+        switch ((cat || '').toLowerCase()) {
+          case 'sciences': return 'cat-science';
+          case 'humanities': return 'cat-humanities';
+          case 'coding / tech':
+          case 'tech': return 'cat-tech';
+          case 'mathematics':
+          case 'math': return 'cat-math';
+          case 'languages': return 'cat-languages';
+          case 'reading': return 'cat-reading';
+          default: return 'cat-general';
+        }
+      };
+
+      // The Lounge View
+      const renderLounge = () => {
+        const lvl = getLevel();
+        const xp = getLevelXP();
+        const pct = Math.min(100, Math.round((xp / 500) * 100));
+        const streak = calculateStreak();
+        const todayHours = calculateTodayHours();
+        const goal = state.profile.dailyGoalHours || 2.0;
+        const goalPct = Math.min(100, Math.round((todayHours / goal) * 100));
+        const recentQuests = state.questHistory.slice(0, 4);
+
+        return `
+          <section class="view">
+            <div class="welcome">
+              <div>
+                <p class="eyebrow">${escapeHTML(dateLabel())}</p>
+                <h1>Welcome back, ${escapeHTML(state.profile.name)}.</h1>
+                <p class="subtle">${escapeHTML(getRankTitle(lvl))} · A little progress each day adds up.</p>
+              </div>
+              <button class="button" data-view="timer">
+                <span aria-hidden="true">▶</span> Start Focus Session
+              </button>
+            </div>
+
+            <!-- Daily Streak & Goal Row -->
+            <div class="daily-row">
+              <div class="daily-card">
+                <div class="daily-icon-box">🔥</div>
+                <div>
+                  <h3>${streak} Day Study Streak</h3>
+                  <p>Keep showing up daily to strengthen focus momentum.</p>
+                </div>
+              </div>
+              <div class="daily-card">
+                <div class="daily-icon-box">🎯</div>
+                <div style="flex: 1;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Daily Goal (${todayHours} / ${goal} hrs)</h3>
+                    <span style="font-size:11px; color:var(--sage); font-weight:600;">${goalPct}%</span>
+                  </div>
+                  <div class="progress-track" style="margin-top:8px; height:5px;">
+                    <div class="progress-fill" style="width:${goalPct}%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Journey Level Card -->
+            <article class="card">
+              <div class="card-top">
+                <div>
+                  <p class="eyebrow" style="margin:0;">YOUR CURRENT JOURNEY</p>
+                  <h2 style="font-size:18px; margin-top:6px;">Focus Level <span style="color:#b5c9af;">${lvl}</span> · ${escapeHTML(getRankTitle(lvl))}</h2>
+                </div>
+                <span class="badge">Active Scholar</span>
+              </div>
+              <div class="progress-track" role="progressbar" aria-valuenow="${xp}" aria-valuemin="0" aria-valuemax="500">
+                <div class="progress-fill" style="width:${pct}%;"></div>
+              </div>
+              <div class="progress-meta">
+                <span>${xp} / 500 XP to Level ${lvl + 1}</span>
+                <span>${pct}% completed</span>
+              </div>
+            </article>
+
+            <!-- Key Stats Grid -->
+            <div class="stats">
+              <article class="stat">
+                <div class="stat-label">
+                  <span>Total Hours</span>
+                  <span class="stat-icon">◷</span>
+                </div>
+                <p class="stat-value">${state.totalHours} hrs</p>
+                <p class="stat-note">Lifetime dedication</p>
+              </article>
+              <article class="stat">
+                <div class="stat-label">
+                  <span>Total XP</span>
+                  <span class="stat-icon">✳</span>
+                </div>
+                <p class="stat-value">${state.totalXP.toLocaleString()}</p>
+                <p class="stat-note">Earned through quests</p>
+              </article>
+              <article class="stat">
+                <div class="stat-label">
+                  <span>Quests Done</span>
+                  <span class="stat-icon">✓</span>
+                </div>
+                <p class="stat-value">${state.questHistory.filter(q => q.status === 'completed').length}</p>
+                <p class="stat-note">Milestones conquered</p>
+              </article>
+              <article class="stat">
+                <div class="stat-label">
+                  <span>Planned</span>
+                  <span class="stat-icon">▤</span>
+                </div>
+                <p class="stat-value">${state.questHistory.filter(q => q.status === 'planned').length}</p>
+                <p class="stat-note">In your queue</p>
+              </article>
+            </div>
+
+            <!-- Recent Quests Section -->
+            <div class="section-heading">
+              <div>
+                <h2>Recent Activity</h2>
+                <p>Your latest quests and completed study sessions</p>
+              </div>
+              <button class="text-button" data-view="ledger">
+                Open Quest Ledger <span aria-hidden="true">›</span>
+              </button>
+            </div>
+            ${renderQuestTable(recentQuests, false)}
+          </section>
+        `;
+      };
+
+      // Zen Timer View
+      const renderTimerView = () => {
+        const formatted = formatTime(secondsLeft);
+        const isBreak = timerPresets[timerKind]?.isBreak || false;
+        const currentModeLabel = timerPresets[timerKind]?.label || `${Math.round(targetSeconds/60)} min`;
+
+        return `
+          <section class="timer-view">
+            <!-- Subject Tag Chip -->
+            <div class="timer-subject-pill" id="changeSubjectBtn" title="Click to change study subject">
+              <span style="opacity:0.6;">Focusing on:</span>
+              <strong style="color:#d5ddd1;">${escapeHTML(currentSessionSubject)}</strong>
+              <span class="cat-badge ${getCategoryBadgeClass(currentSessionCategory)}">${escapeHTML(currentSessionCategory)}</span>
+              <span style="font-size:11px; margin-left:4px; opacity:0.6;">✎</span>
+            </div>
+
+            <div class="timer-status">
+              <span class="status-dot ${timerActive ? 'active' : ''}"></span>
+              <span id="timerStatusLabel">
+                ${timerActive ? (isBreak ? 'Break in progress' : 'Focus session running') : (isBreak ? 'Ready for break' : 'Ready to focus')}
+              </span>
+            </div>
+
+            <div class="timer-value" id="timerValue" role="timer" aria-label="${currentModeLabel}: ${formatted}">
+              ${formatted}
+            </div>
+
+            <p class="timer-caption" id="timerCaption">
+              ${isBreak ? 'Step back, breathe deeply, and relax your mind.' : 'One thing at a time. Total presence, zero distractions.'}
+            </p>
+
+            <div class="timer-controls">
+              <button class="button" id="toggleTimerBtn">
+                <span aria-hidden="true">${timerActive ? '⏸' : '▶'}</span>
+                <span>${timerActive ? 'Pause focus' : 'Begin focus'}</span>
+              </button>
+              <button class="button button-outline" id="skipModeBtn">
+                ${isBreak ? 'Back to Focus' : 'Take a Break'}
+              </button>
+              <button class="button button-outline reset" id="resetTimerBtn" aria-label="Reset timer" title="Reset timer (R)">
+                ↺
+              </button>
+            </div>
+
+            <!-- Mode selector presets -->
+            <div class="timer-modes">
+              <button class="timer-mode-btn ${timerKind === 'focus' ? 'selected' : ''}" data-mode="focus">Focus · 25m</button>
+              <button class="timer-mode-btn ${timerKind === 'deep' ? 'selected' : ''}" data-mode="deep">Deep Focus · 50m</button>
+              <button class="timer-mode-btn ${timerKind === 'break' ? 'selected' : ''}" data-mode="break">Break · 5m</button>
+              <button class="timer-mode-btn ${timerKind === 'longBreak' ? 'selected' : ''}" data-mode="longBreak">Long Break · 15m</button>
+              <button class="timer-mode-btn ${timerKind === 'custom' ? 'selected' : ''}" id="customTimeBtn">Custom...</button>
+            </div>
+
+            <!-- Ambient Sound Controller -->
+            <div class="ambient-controls">
+              <span>🎧 Ambient Sound:</span>
+              <select id="ambientSoundSelect">
+                <option value="none" ${state.settings.ambientType === 'none' ? 'selected' : ''}>Off</option>
+                <option value="rain" ${state.settings.ambientType === 'rain' ? 'selected' : ''}>Soothing Rain</option>
+                <option value="stream" ${state.settings.ambientType === 'stream' ? 'selected' : ''}>Gentle Stream</option>
+                <option value="pink" ${state.settings.ambientType === 'pink' ? 'selected' : ''}>Lo-Fi Pink Noise</option>
+              </select>
+              <input type="range" id="ambientVolumeRange" min="0" max="1" step="0.05" value="${state.settings.ambientVolume}" title="Ambient Volume">
+            </div>
+          </section>
+        `;
+      };
+
+      // Quest Ledger View
+      let ledgerFilter = 'all'; // all, completed, planned
+      let ledgerSearch = '';
+      let ledgerCategory = 'all';
+      let ledgerTab = 'completed'; // completed, planned
+
+      const renderLedger = () => {
+        let filtered = state.questHistory.filter(q => {
+          if (ledgerFilter === 'completed' && q.status !== 'completed') return false;
+          if (ledgerFilter === 'planned' && q.status !== 'planned') return false;
+          if (ledgerCategory !== 'all' && q.category !== ledgerCategory) return false;
+          if (ledgerSearch) {
+            const term = ledgerSearch.toLowerCase();
+            return (q.subject || '').toLowerCase().includes(term) || (q.category || '').toLowerCase().includes(term);
+          }
+          return true;
+        });
+
+        const completedCount = state.questHistory.filter(q => q.status === 'completed').length;
+        const plannedCount = state.questHistory.filter(q => q.status === 'planned').length;
+
+        return `
+          <section class="view">
+            <div class="welcome" style="margin-bottom:24px;">
+              <div>
+                <p class="eyebrow">Your Study Record</p>
+                <h1>Quest Ledger</h1>
+                <p class="subtle">Track past focus sessions and organize upcoming study quests.</p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="button button-outline button-sm" id="exportDataBtn">⭳ Export Data</button>
+                <button class="button button-outline button-sm" id="importDataBtn">⭱ Import</button>
+              </div>
+            </div>
+
+            <!-- Form Panel: Dual-Mode (Log Session vs Plan Quest) -->
+            <article class="form-panel">
+              <div class="form-panel-header">
+                <div class="tab-toggle">
+                  <button type="button" class="${ledgerTab === 'completed' ? 'active' : ''}" id="tabLogCompleted">Log Completed Session</button>
+                  <button type="button" class="${ledgerTab === 'planned' ? 'active' : ''}" id="tabPlanQuest">Plan Upcoming Quest</button>
+                </div>
+                <span style="font-size:11.5px; color:var(--muted-2);">
+                  ${ledgerTab === 'completed' ? 'Records instantly with XP reward' : 'Adds to your To-Do queue'}
+                </span>
+              </div>
+
+              <form class="quest-form" id="questForm">
+                <label class="field">
+                  Subject / Topic
+                  <input name="subject" required maxlength="120" placeholder="${ledgerTab === 'completed' ? 'e.g. Cognitive Psychology Ch. 3' : 'e.g. Solve Linear Algebra Homework'}" autocomplete="off">
+                </label>
+                <label class="field">
+                  Category
+                  <select name="category">
+                    <option value="Sciences">Sciences</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Coding / Tech">Coding / Tech</option>
+                    <option value="Humanities">Humanities</option>
+                    <option value="Languages">Languages</option>
+                    <option value="Reading">Reading</option>
+                    <option value="General" selected>General</option>
+                  </select>
+                </label>
+                <label class="field">
+                  ${ledgerTab === 'completed' ? 'Duration (hrs)' : 'Target (hrs)'}
+                  <input name="hours" required type="number" min="0.25" max="24" step="0.25" value="1">
+                </label>
+                <button class="button" type="submit">
+                  <span>＋</span> Add ${ledgerTab === 'completed' ? 'Session' : 'Quest'}
+                </button>
+              </form>
+            </article>
+
+            <!-- Ledger Controls: Search & Category Filters -->
+            <div class="ledger-controls">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="ledgerSearchInput" placeholder="Search subjects or categories..." value="${escapeHTML(ledgerSearch)}">
+              </div>
+
+              <div class="ledger-filters">
+                <button class="filter-chip ${ledgerFilter === 'all' ? 'active' : ''}" data-filter="all">All (${state.questHistory.length})</button>
+                <button class="filter-chip ${ledgerFilter === 'completed' ? 'active' : ''}" data-filter="completed">Completed (${completedCount})</button>
+                <button class="filter-chip ${ledgerFilter === 'planned' ? 'active' : ''}" data-filter="planned">Planned (${plannedCount})</button>
+                <select id="categoryFilterSelect" style="background:#171816; border:1px solid #2e302b; color:#91968d; border-radius:20px; padding:4px 10px; font-size:11.5px; cursor:pointer;">
+                  <option value="all" ${ledgerCategory === 'all' ? 'selected' : ''}>All Categories</option>
+                  <option value="Sciences" ${ledgerCategory === 'Sciences' ? 'selected' : ''}>Sciences</option>
+                  <option value="Mathematics" ${ledgerCategory === 'Mathematics' ? 'selected' : ''}>Mathematics</option>
+                  <option value="Coding / Tech" ${ledgerCategory === 'Coding / Tech' ? 'selected' : ''}>Coding / Tech</option>
+                  <option value="Humanities" ${ledgerCategory === 'Humanities' ? 'selected' : ''}>Humanities</option>
+                  <option value="Languages" ${ledgerCategory === 'Languages' ? 'selected' : ''}>Languages</option>
+                  <option value="Reading" ${ledgerCategory === 'Reading' ? 'selected' : ''}>Reading</option>
+                  <option value="General" ${ledgerCategory === 'General' ? 'selected' : ''}>General</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Table -->
+            ${renderQuestTable(filtered, true)}
+          </section>
+        `;
+      };
+
+      // Insights & Analytics View
+      const renderAnalytics = () => {
+        // Compute daily hours for the past 7 days
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const weeklyHours = [1.5, 2.5, 3.0, 1.0, 2.0, 0.5, calculateTodayHours()];
+        const maxVal = Math.max(...weeklyHours, 3.5);
+
+        // Compute Category Breakdown
+        const catMap = {};
+        state.questHistory.filter(q => q.status === 'completed').forEach(q => {
+          const cat = q.category || 'General';
+          catMap[cat] = (catMap[cat] || 0) + (Number(q.duration) || 0);
+        });
+        const totalDuration = Object.values(catMap).reduce((a, b) => a + b, 0) || 1;
+
+        return `
+          <section class="view">
+            <div class="welcome" style="margin-bottom:28px;">
+              <div>
+                <p class="eyebrow">Study Intelligence</p>
+                <h1>Study Insights</h1>
+                <p class="subtle">Analyze your study patterns, topic distribution, and milestones.</p>
+              </div>
+            </div>
+
+            <!-- Weekly Activity Bar Chart -->
+            <article class="chart-panel">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <h2>Weekly Focus Hours</h2>
+                  <p style="font-size:12px; color:var(--muted-2); margin:3px 0 0;">Hours studied across each day</p>
+                </div>
+                <span class="badge">Past 7 Days</span>
+              </div>
+
+              <div class="chart-bars">
+                ${days.map((day, idx) => {
+                  const hrs = weeklyHours[idx];
+                  const barHeightPct = Math.max(4, Math.round((hrs / maxVal) * 100));
+                  const isToday = idx === 6;
+                  return `
+                    <div class="chart-col">
+                      <span class="chart-val">${hrs > 0 ? hrs + 'h' : '0'}</span>
+                      <div class="chart-bar-wrap">
+                        <div class="chart-bar ${isToday ? 'today' : ''}" style="height:${barHeightPct}%;"></div>
+                      </div>
+                      <span class="chart-label">${day}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </article>
+
+            <!-- Category Distribution Breakdown -->
+            <article class="card">
+              <h2 style="margin-bottom:6px;">Topic Distribution</h2>
+              <p class="subtle" style="margin-bottom:20px;">Where you invest your focus time</p>
+              <div style="display:grid; gap:14px;">
+                ${Object.entries(catMap).map(([cat, hrs]) => {
+                  const pct = Math.round((hrs / totalDuration) * 100);
+                  return `
+                    <div>
+                      <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;">
+                        <span><span class="cat-badge ${getCategoryBadgeClass(cat)}">${escapeHTML(cat)}</span></span>
+                        <span style="font-family:var(--mono); color:#adb2a7;">${hrs.toFixed(1)} hrs (${pct}%)</span>
+                      </div>
+                      <div class="progress-track" style="margin-top:0; height:6px;">
+                        <div class="progress-fill" style="width:${pct}%;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </article>
+
+            <!-- Scholar Milestones & Badges -->
+            <article class="card">
+              <h2 style="margin-bottom:6px;">Scholar Milestones</h2>
+              <p class="subtle" style="margin-bottom:18px;">Unlock achievements as your discipline deepens</p>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+                <div style="padding:14px; background:#1b1d19; border:1px solid #2f342b; border-radius:8px; display:flex; gap:12px; align-items:center;">
+                  <span style="font-size:24px;">🌱</span>
+                  <div>
+                    <strong style="font-size:13px; display:block;">First Awakening</strong>
+                    <span style="font-size:11px; color:var(--muted);">Completed your 1st quest</span>
+                  </div>
+                </div>
+                <div style="padding:14px; background:#1b1d19; border:1px solid #2f342b; border-radius:8px; display:flex; gap:12px; align-items:center;">
+                  <span style="font-size:24px;">⏱</span>
+                  <div>
+                    <strong style="font-size:13px; display:block;">Deep Worker</strong>
+                    <span style="font-size:11px; color:var(--muted);">Logged 25+ study hours</span>
+                  </div>
+                </div>
+                <div style="padding:14px; background:#1b1d19; border:1px solid #2f342b; border-radius:8px; display:flex; gap:12px; align-items:center;">
+                  <span style="font-size:24px;">🔥</span>
+                  <div>
+                    <strong style="font-size:13px; display:block;">Momentum</strong>
+                    <span style="font-size:11px; color:var(--muted);">Achieved a 3+ day streak</span>
+                  </div>
+                </div>
+                <div style="padding:14px; background:#1b1d19; border:1px solid #2f342b; border-radius:8px; display:flex; gap:12px; align-items:center;">
+                  <span style="font-size:24px;">🧘</span>
+                  <div>
+                    <strong style="font-size:13px; display:block;">Zen Master</strong>
+                    <span style="font-size:11px; color:var(--muted);">Reach Level 15 (Scholar)</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+        `;
+      };
+
+      // Render Quest Table Helper
+      const renderQuestTable = (quests, showActions = true) => {
+        if (!quests || !quests.length) {
+          return '<p class="empty">No quests match your criteria. Start a new session or create a quest above.</p>';
+        }
+
+        return `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  ${showActions ? '<th style="width:36px;"></th>' : ''}
+                  <th>Subject</th>
+                  <th>Duration</th>
+                  <th>Date</th>
+                  <th>XP</th>
+                  ${showActions ? '<th style="text-align:right;">Actions</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${quests.map(q => {
+                  const isCompleted = q.status === 'completed';
+                  return `
+                    <tr data-quest-id="${escapeHTML(q.id)}">
+                      ${showActions ? `
+                        <td>
+                          <input type="checkbox" class="quest-check" data-action="toggle-complete" data-id="${escapeHTML(q.id)}" ${isCompleted ? 'checked title="Completed"' : 'title="Check to mark completed"'}>
+                        </td>
+                      ` : ''}
+                      <td>
+                        <span style="${isCompleted ? '' : 'color:#c5c9c1;'}">${escapeHTML(q.subject)}</span>
+                        <span class="cat-badge ${getCategoryBadgeClass(q.category)}">${escapeHTML(q.category || 'General')}</span>
+                      </td>
+                      <td>${escapeHTML(q.duration)} ${Number(q.duration) === 1 ? 'hr' : 'hrs'}</td>
+                      <td>${escapeHTML(q.date)}</td>
+                      <td style="color:${isCompleted ? '#a8bfa1' : '#888d84'}; font-family:var(--mono);">
+                        ${isCompleted ? '+' + escapeHTML(q.xp) + ' XP' : '~' + escapeHTML(q.xp) + ' XP'}
+                      </td>
+                      ${showActions ? `
+                        <td style="text-align:right;">
+                          <div class="row-actions">
+                            <button class="action-btn" data-action="focus-quest" data-id="${escapeHTML(q.id)}" title="Focus on this quest with Timer">◷</button>
+                            <button class="action-btn del" data-action="delete-quest" data-id="${escapeHTML(q.id)}" title="Delete quest">✕</button>
+                          </div>
+                        </td>
+                      ` : ''}
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      /* -------------------------------------------------------------
+       * Topbar & Sidebar Live Status
+       * ----------------------------------------------------------- */
+      const updateGlobalTimerUI = () => {
+        // Tab Title
+        const formatted = formatTime(secondsLeft);
+        if (timerActive) {
+          const kindStr = timerPresets[timerKind]?.isBreak ? 'Break' : 'Focus';
+          document.title = `(${formatted}) ${kindStr} · ZenQuest`;
+        } else {
+          document.title = 'ZenQuest — Your study space';
+        }
+
+        // Live Topbar Mini-Timer
+        const miniContainer = document.getElementById('topbarMiniTimer');
+        if (miniContainer) {
+          if (timerActive && view !== 'timer') {
+            miniContainer.style.display = 'inline-flex';
+            miniContainer.innerHTML = `
+              <span class="mini-timer-pulse"></span>
+              <span>${formatted}</span>
+              <span style="opacity:0.6; font-size:10px;">[${timerPresets[timerKind]?.isBreak ? 'Break' : 'Focus'}]</span>
+            `;
+          } else {
+            miniContainer.style.display = 'none';
+          }
+        }
+
+        // Ambient Sound Quick Pill
+        const ambientPill = document.getElementById('topbarAmbientPill');
+        if (ambientPill) {
+          if (state.settings.ambientType !== 'none') {
+            ambientPill.classList.add('active');
+            ambientPill.innerHTML = `🎧 Ambient: ${state.settings.ambientType}`;
+          } else {
+            ambientPill.classList.remove('active');
+            ambientPill.innerHTML = `🎧 Ambient: Off`;
+          }
+        }
+
+        // If Timer view is currently mounted, update DOM nodes directly
+        if (view === 'timer') {
+          const valEl = document.getElementById('timerValue');
+          const statusEl = document.getElementById('timerStatusLabel');
+          const toggleBtn = document.getElementById('toggleTimerBtn');
+          const dotEl = document.querySelector('.timer-view .status-dot');
+
+          if (valEl) valEl.textContent = formatted;
+          if (dotEl) dotEl.classList.toggle('active', timerActive);
+          if (statusEl) {
+            const isBreak = timerPresets[timerKind]?.isBreak || false;
+            statusEl.textContent = timerActive
+              ? (isBreak ? 'Break in progress' : 'Focus session running')
+              : (isBreak ? 'Ready for break' : 'Ready to focus');
+          }
+          if (toggleBtn) {
+            toggleBtn.innerHTML = `<span aria-hidden="true">${timerActive ? '⏸' : '▶'}</span> <span>${timerActive ? 'Pause focus' : 'Begin focus'}</span>`;
+          }
+        }
+      };
+
+      /* -------------------------------------------------------------
+       * Settings & Customization Modal
+       * ----------------------------------------------------------- */
+      const openSettingsModal = () => {
+        let modalEl = document.getElementById('settingsModal');
+        if (!modalEl) {
+          modalEl = document.createElement('div');
+          modalEl.id = 'settingsModal';
+          modalEl.className = 'modal-backdrop';
+          document.body.appendChild(modalEl);
+        }
+
+        modalEl.innerHTML = `
+          <div class="modal" role="dialog" aria-labelledby="settingsTitle">
+            <div class="modal-head">
+              <h2 id="settingsTitle">Settings & Preferences</h2>
+              <button class="modal-close" id="closeSettingsBtn" aria-label="Close settings">✕</button>
+            </div>
+
+            <!-- Scholar Profile -->
+            <div class="modal-section">
+              <h3>Scholar Profile</h3>
+              <div style="display:grid; gap:12px;">
+                <label class="field">
+                  Display Name
+                  <input type="text" id="settingProfileName" value="${escapeHTML(state.profile.name)}" maxlength="30">
+                </label>
+                <label class="field">
+                  Daily Study Goal (Hours)
+                  <input type="number" id="settingDailyGoal" min="0.5" max="16" step="0.5" value="${state.profile.dailyGoalHours}">
+                </label>
+              </div>
+            </div>
+
+            <!-- Sound & Audio Preferences -->
+            <div class="modal-section">
+              <h3>Audio & Zen Cues</h3>
+              <div style="display:grid; gap:12px;">
+                <label style="display:flex; align-items:center; justify-content:space-between; font-size:13px; cursor:pointer;">
+                  <span>Tibetan Singing Bowl Chime on Completion</span>
+                  <input type="checkbox" id="settingChimeToggle" ${state.settings.chimeEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--sage);">
+                </label>
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:4px;">
+                    <span>Chime Volume</span>
+                    <button class="text-button" id="testChimeBtn" style="padding:0; font-size:11px;">▶ Test Chime</button>
+                  </div>
+                  <input type="range" id="settingChimeVolume" min="0" max="1" step="0.05" value="${state.settings.chimeVolume}" style="width:100%; accent-color:var(--sage);">
+                </div>
+              </div>
+            </div>
+
+            <!-- Timer Preferences -->
+            <div class="modal-section">
+              <h3>Focus Session Defaults</h3>
+              <label style="display:flex; align-items:center; justify-content:space-between; font-size:13px; cursor:pointer;">
+                <span>Auto-Record Completed Focus Sessions to Ledger</span>
+                <input type="checkbox" id="settingAutoRecord" ${state.settings.autoRecordSessions ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--sage);">
+              </label>
+            </div>
+
+            <!-- Data & Backup -->
+            <div class="modal-section">
+              <h3>Data Management</h3>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="button button-outline button-sm" id="modalExportBtn">Download JSON Backup</button>
+                <button class="button button-danger button-sm" id="modalResetBtn">Reset to Sample Data</button>
+              </div>
+            </div>
+
+            <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+              <button class="button button-outline" id="cancelSettingsBtn">Close</button>
+              <button class="button" id="saveSettingsBtn">Save Changes</button>
+            </div>
+          </div>
+        `;
+
+        modalEl.classList.add('open');
+
+        // Bind Settings Actions
+        const close = () => modalEl.classList.remove('open');
+        document.getElementById('closeSettingsBtn').onclick = close;
+        document.getElementById('cancelSettingsBtn').onclick = close;
+        modalEl.onclick = e => { if (e.target === modalEl) close(); };
+
+        document.getElementById('testChimeBtn').onclick = () => {
+          playZenChime();
+        };
+
+        document.getElementById('saveSettingsBtn').onclick = () => {
+          const name = document.getElementById('settingProfileName').value.trim() || 'Scholar';
+          const goal = parseFloat(document.getElementById('settingDailyGoal').value) || 2.0;
+          const chime = document.getElementById('settingChimeToggle').checked;
+          const chimeVol = parseFloat(document.getElementById('settingChimeVolume').value) || 0.7;
+          const autoRecord = document.getElementById('settingAutoRecord').checked;
+
+          state.profile.name = name;
+          state.profile.avatarChar = name.charAt(0).toUpperCase();
+          state.profile.dailyGoalHours = goal;
+          state.settings.chimeEnabled = chime;
+          state.settings.chimeVolume = chimeVol;
+          state.settings.autoRecordSessions = autoRecord;
+
+          saveState();
+          close();
+          render();
+          showToast('Preferences updated successfully!');
+        };
+
+        document.getElementById('modalExportBtn').onclick = exportDataAsJSON;
+        document.getElementById('modalResetBtn').onclick = () => {
+          if (confirm('Reset ZenQuest data to fresh defaults? Any unsaved sessions will be replaced.')) {
+            state = { ...defaultState, questHistory: [...initialQuests] };
+            saveState();
+            close();
+            render();
+            showToast('ZenQuest data reset to sample state.');
+          }
+        };
+      };
+
+      /* -------------------------------------------------------------
+       * Data Export & Import Handlers
+       * ----------------------------------------------------------- */
+      const exportDataAsJSON = () => {
+        const json = JSON.stringify(state, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `zenquest-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Backup JSON downloaded successfully!');
+      };
+
+      const importDataFromJSON = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = ev => {
+            try {
+              const data = JSON.parse(ev.target.result);
+              if (data && Array.isArray(data.questHistory)) {
+                state = {
+                  ...defaultState,
+                  ...data,
+                  profile: { ...defaultState.profile, ...(data.profile || {}) },
+                  settings: { ...defaultState.settings, ...(data.settings || {}) }
+                };
+                saveState();
+                render();
+                showToast('Data imported and restored successfully!');
+              } else {
+                alert('Invalid ZenQuest backup file format.');
+              }
+            } catch (err) {
+              alert('Could not parse JSON file: ' + err.message);
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      };
+
+      /* -------------------------------------------------------------
+       * Main Render Function
+       * ----------------------------------------------------------- */
+      const root = document.getElementById('app');
+
+      function render() {
+        const activeNav = navItems.find(item => item.id === view) || navItems[0];
+        const lvl = getLevel();
+
+        root.innerHTML = `
+          <!-- Sidebar -->
+          <aside class="sidebar">
+            <div class="brand">
+              <span class="brand-mark" aria-hidden="true">✳</span>
+              <span>ZenQuest</span>
+            </div>
+
+            <nav class="nav" aria-label="Main navigation">
+              ${navItems.map(item => `
+                <button type="button" data-view="${item.id}" aria-current="${view === item.id ? 'page' : 'false'}">
+                  <span class="nav-mark" aria-hidden="true">${item.mark}</span>
+                  <span>${item.label}</span>
+                </button>
+              `).join('')}
+            </nav>
+
+            <div class="side-note">
+              <p class="side-note-label">Zen Principle</p>
+              <strong>25 min pure focus.<br>5 min mindful rest.</strong>
+              <p>Space (play/pause) · R (reset)</p>
+            </div>
+
+            <button type="button" class="profile-btn" id="sidebarProfileBtn" title="Open Settings">
+              <span class="avatar">${escapeHTML(state.profile.avatarChar || 'S')}</span>
+              <div class="profile-info">
+                <div class="profile-name">${escapeHTML(state.profile.name)}</div>
+                <div class="profile-level">Level ${lvl} · ${escapeHTML(getRankTitle(lvl))}</div>
+              </div>
+              <span class="profile-gear">⚙</span>
+            </button>
+          </aside>
+
+          <!-- Main Surface -->
+          <main class="main">
+            <header class="topbar">
+              <div class="crumb">
+                <span class="mobile-brand">ZenQuest</span>
+                <span class="crumb-default">Study Space</span>
+                <span class="crumb-separator">/</span>
+                <span class="crumb-current">${activeNav.label}</span>
+              </div>
+
+              <div class="top-actions">
+                <!-- Mini Timer Badge (visible when active outside timer view) -->
+                <div class="mini-timer" id="topbarMiniTimer" title="Active Focus Session (Click to view)" style="display:none;" data-view="timer"></div>
+
+                <!-- Ambient Sound Status Pill -->
+                <button type="button" class="ambient-pill" id="topbarAmbientPill" title="Toggle Ambient Audio">
+                  🎧 Ambient: ${state.settings.ambientType === 'none' ? 'Off' : state.settings.ambientType}
+                </button>
+
+                <div class="top-date">${escapeHTML(dateLabel())}</div>
+              </div>
+            </header>
+
+            ${view === 'lounge' ? renderLounge() : view === 'timer' ? renderTimerView() : view === 'ledger' ? renderLedger() : renderAnalytics()}
+          </main>
+        `;
+
+        // Bind global view navigation buttons
+        root.querySelectorAll('[data-view]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            view = btn.dataset.view;
+            render();
+          });
+        });
+
+        // Bind Profile / Settings Modal button
+        document.getElementById('sidebarProfileBtn')?.addEventListener('click', openSettingsModal);
+
+        // Bind Ambient Pill toggle
+        document.getElementById('topbarAmbientPill')?.addEventListener('click', () => {
+          const types = ['none', 'rain', 'stream', 'pink'];
+          const currentIdx = types.indexOf(state.settings.ambientType);
+          const nextType = types[(currentIdx + 1) % types.length];
+          state.settings.ambientType = nextType;
+          saveState();
+          startAmbientSound(nextType);
+          updateGlobalTimerUI();
+          showToast(`Ambient audio: ${nextType === 'none' ? 'Muted' : nextType}`);
+        });
+
+        // View Specific Bindings
+        if (view === 'timer') bindTimerViewEvents();
+        if (view === 'ledger') bindLedgerViewEvents();
+
+        updateGlobalTimerUI();
+      }
+
+      /* -------------------------------------------------------------
+       * Timer View Event Binding
+       * ----------------------------------------------------------- */
+      function bindTimerViewEvents() {
+        document.getElementById('toggleTimerBtn')?.addEventListener('click', toggleTimer);
+        document.getElementById('resetTimerBtn')?.addEventListener('click', resetTimer);
+
+        document.getElementById('skipModeBtn')?.addEventListener('click', () => {
+          const isBreak = timerPresets[timerKind]?.isBreak || false;
+          if (isBreak) {
+            setTimerMode('focus');
+            showToast('Switched to Focus mode.');
+          } else {
+            setTimerMode('break');
+            showToast('Switched to Break mode.');
+          }
+        });
+
+        // Preset mode buttons
+        root.querySelectorAll('.timer-mode-btn[data-mode]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            setTimerMode(btn.dataset.mode);
+          });
+        });
+
+        // Custom time entry
+        document.getElementById('customTimeBtn')?.addEventListener('click', () => {
+          const currentMins = Math.round(targetSeconds / 60);
+          const userMins = prompt('Enter focus duration in minutes (1 - 180):', currentMins);
+          if (userMins !== null) {
+            const num = parseInt(userMins, 10);
+            if (!isNaN(num) && num >= 1 && num <= 180) {
+              setTimerMode('custom', num);
+              showToast(`Custom timer set to ${num} minutes.`);
+            } else {
+              alert('Please enter a valid number between 1 and 180.');
+            }
+          }
+        });
+
+        // Change Subject Pill
+        document.getElementById('changeSubjectBtn')?.addEventListener('click', () => {
+          const subject = prompt('What topic are you studying in this session?', currentSessionSubject);
+          if (subject !== null && subject.trim()) {
+            currentSessionSubject = subject.trim();
+            const cat = prompt('Category (Sciences, Mathematics, Coding / Tech, Humanities, Languages, Reading, General):', currentSessionCategory);
+            if (cat && cat.trim()) currentSessionCategory = cat.trim();
+            render();
+          }
+        });
+
+        // Ambient sound controls
+        const ambSelect = document.getElementById('ambientSoundSelect');
+        const ambVol = document.getElementById('ambientVolumeRange');
+
+        ambSelect?.addEventListener('change', e => {
+          const val = e.target.value;
+          state.settings.ambientType = val;
+          saveState();
+          startAmbientSound(val);
+          updateGlobalTimerUI();
+        });
+
+        ambVol?.addEventListener('input', e => {
+          const val = parseFloat(e.target.value);
+          state.settings.ambientVolume = val;
+          saveState();
+          if (ambientNodes && ambientNodes.gain) {
+            ambientNodes.gain.gain.setValueAtTime(val * 0.25, audioCtx.currentTime);
+          }
+        });
+      }
+
+      /* -------------------------------------------------------------
+       * Quest Ledger View Event Binding
+       * ----------------------------------------------------------- */
+      function bindLedgerViewEvents() {
+        // Tab switching: Log Completed vs Plan Quest
+        document.getElementById('tabLogCompleted')?.addEventListener('click', () => {
+          ledgerTab = 'completed';
+          render();
+        });
+        document.getElementById('tabPlanQuest')?.addEventListener('click', () => {
+          ledgerTab = 'planned';
+          render();
+        });
+
+        // Search Input
+        const searchInput = document.getElementById('ledgerSearchInput');
+        searchInput?.addEventListener('input', e => {
+          ledgerSearch = e.target.value;
+          render();
+          // maintain input focus after re-render
+          const newInput = document.getElementById('ledgerSearchInput');
+          if (newInput) {
+            newInput.focus();
+            newInput.setSelectionRange(newInput.value.length, newInput.value.length);
+          }
+        });
+
+        // Filter chips
+        root.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
+          chip.addEventListener('click', () => {
+            ledgerFilter = chip.dataset.filter;
+            render();
+          });
+        });
+
+        // Category filter select
+        document.getElementById('categoryFilterSelect')?.addEventListener('change', e => {
+          ledgerCategory = e.target.value;
+          render();
+        });
+
+        // Form submission (Add Completed Session OR Add Planned Quest)
+        const form = document.getElementById('questForm');
+        form?.addEventListener('submit', e => {
+          e.preventDefault();
+          const data = new FormData(form);
+          const subject = String(data.get('subject') || '').trim();
+          const category = String(data.get('category') || 'General');
+          const hours = Number(data.get('hours')) || 1;
+
+          if (!subject || hours <= 0) return;
+
+          const isCompleted = ledgerTab === 'completed';
+          const earnedXP = Math.round(hours * 100);
+          const now = new Date();
+          const dateStr = isCompleted
+            ? 'Today, ' + new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(now)
+            : 'Upcoming';
+
+          const newQuest = {
+            id: 'quest-' + Date.now(),
+            subject,
+            category,
+            duration: hours,
+            date: dateStr,
+            xp: earnedXP,
+            status: isCompleted ? 'completed' : 'planned'
+          };
+
+          if (isCompleted) {
+            state.totalXP += earnedXP;
+            state.totalHours = +(state.totalHours + hours).toFixed(2);
+          }
+
+          state.questHistory = [newQuest, ...state.questHistory];
+          saveState();
+          render();
+          showToast(isCompleted ? `Session logged! +${earnedXP} XP earned.` : 'Quest added to your plan!');
+        });
+
+        // Table Action Buttons (Complete Checkbox, Focus Timer, Delete)
+        root.querySelectorAll('[data-action="toggle-complete"]').forEach(check => {
+          check.addEventListener('change', () => {
+            const id = check.dataset.id;
+            const quest = state.questHistory.find(q => q.id === id);
+            if (!quest) return;
+
+            if (check.checked) {
+              quest.status = 'completed';
+              quest.date = 'Today, ' + new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
+              state.totalXP += quest.xp;
+              state.totalHours = +(state.totalHours + (Number(quest.duration) || 1)).toFixed(2);
+              playZenChime();
+              showToast(`Quest completed! +${quest.xp} XP earned.`);
+            } else {
+              quest.status = 'planned';
+              quest.date = 'Upcoming';
+              state.totalXP = Math.max(0, state.totalXP - quest.xp);
+              state.totalHours = Math.max(0, +(state.totalHours - (Number(quest.duration) || 1)).toFixed(2));
+              showToast(`Quest reverted to planned.`);
+            }
+            saveState();
+            render();
+          });
+        });
+
+        root.querySelectorAll('[data-action="focus-quest"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const quest = state.questHistory.find(q => q.id === id);
+            if (quest) {
+              currentSessionSubject = quest.subject;
+              currentSessionCategory = quest.category || 'General';
+              view = 'timer';
+              render();
+              showToast(`Timer primed for: ${quest.subject}`);
+            }
+          });
+        });
+
+        root.querySelectorAll('[data-action="delete-quest"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const idx = state.questHistory.findIndex(q => q.id === id);
+            if (idx === -1) return;
+
+            const [removed] = state.questHistory.splice(idx, 1);
+            lastDeletedQuest = { quest: removed, index: idx };
+
+            if (removed.status === 'completed') {
+              state.totalXP = Math.max(0, state.totalXP - removed.xp);
+              state.totalHours = Math.max(0, +(state.totalHours - (Number(removed.duration) || 1)).toFixed(2));
+            }
+
+            saveState();
+            render();
+
+            showToast(`Deleted "${removed.subject}"`, 'Undo', () => {
+              if (lastDeletedQuest) {
+                state.questHistory.splice(lastDeletedQuest.index, 0, lastDeletedQuest.quest);
+                if (lastDeletedQuest.quest.status === 'completed') {
+                  state.totalXP += lastDeletedQuest.quest.xp;
+                  state.totalHours = +(state.totalHours + (Number(lastDeletedQuest.quest.duration) || 1)).toFixed(2);
+                }
+                saveState();
+                render();
+                showToast('Restored quest.');
+                lastDeletedQuest = null;
+              }
+            });
+          });
+        });
+
+        // Backup export & import buttons
+        document.getElementById('exportDataBtn')?.addEventListener('click', exportDataAsJSON);
+        document.getElementById('importDataBtn')?.addEventListener('click', importDataFromJSON);
+      }
+
+      /* -------------------------------------------------------------
+       * Keyboard Shortcuts
+       * ----------------------------------------------------------- */
+      window.addEventListener('keydown', e => {
+        // Do not intercept if user is typing inside an input/textarea/select
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+        // Escape closes any open modal
+        if (e.key === 'Escape') {
+          document.getElementById('settingsModal')?.classList.remove('open');
+          return;
+        }
+
+        // Space toggles timer
+        if (e.code === 'Space') {
+          e.preventDefault();
+          toggleTimer();
+          return;
+        }
+
+        // R resets timer
+        if (e.key === 'r' || e.key === 'R') {
+          resetTimer();
+          showToast('Timer reset.');
+          return;
+        }
+
+        // 1, 2, 3, 4 navigates views
+        if (e.key === '1') { view = 'lounge'; render(); }
+        if (e.key === '2') { view = 'timer'; render(); }
+        if (e.key === '3') { view = 'ledger'; render(); }
+        if (e.key === '4') { view = 'analytics'; render(); }
+      });
+
+      /* -------------------------------------------------------------
+       * Initialization
+       * ----------------------------------------------------------- */
+      loadState();
+      render();
+    })();
+  </script>
+</body>
+</html>
